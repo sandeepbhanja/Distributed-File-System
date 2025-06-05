@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+spec:
+  selector:
+    matchLabels:
+      app: auth-deployment
+  template:
+    metadata:
+      labels:
+        app: auth-deployment
+    spec:
+      containers:
+        - name: auth-deployment-container
+          image: sandeepbhanja/dfs-auth-deployment:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  selector:
+    matchLabels:
+      app: postgres-deployment
+  template:
+    metadata:
+      labels:
+        app: postgres-deployment
+    spec:
+      containers:
+        - name: postgres-container
+          image: postgres:latest
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "password"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-storage
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin-deployment
+  template:
+    metadata:
+      labels:
+        app: pgadmin-deployment
+    spec:
+      containers:
+        - name: pgadmin-container
+          image: dpage/pgadmin4:latest
+          imagePullPolicy: Always
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "sandeep@gmail.com"
+            - name: PGADMIN_DEFAULT_PASSWORD
+              value: "password"
+          volumeMounts:
+            - mountPath: /var/lib/pgadmin/sessions
+              name: pgadmin-storage
+      volumes:
+        - name: pgadmin-storage
+          persistentVolumeClaim:
+            claimName: pgadmin-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+spec:
+  selector:
+    matchLabels:
+      app: redis-deployment
+  template:
+    metadata:
+      labels:
+        app: redis-deployment
+    spec:
+      containers:
+        - name: redis-container
+          image: redis:latest
+          volumeMounts:
+            - mountPath: /data
+              name: redis-storage
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
+---

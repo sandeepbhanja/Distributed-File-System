@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-deployment
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin-service
+spec:
+  selector:
+    app: pgadmin-deployment
+  ports:
+    - port: 5050
+      targetPort: 80
+      protocol: TCP
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  selector:
+    app: postgres-deployment
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  selector:
+    app: redis-deployment
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+  type: LoadBalancer
+---
