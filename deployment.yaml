@@ -99,3 +99,20 @@ spec:
           persistentVolumeClaim:
             claimName: redis-pvc
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+spec:
+  selector:
+    matchLabels:
+      app: gateway-deployment
+  template:
+    metadata:
+      labels:
+        app: gateway-deployment
+    spec:
+      containers:
+        - name: gateway-container
+          image: sandeepbhanja/dfs-gateway-service:latest
+---
