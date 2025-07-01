@@ -1,18 +1,14 @@
-package com.gateway.AuthController;
+package com.gateway.Auth;
 
 import com.gateway.External.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +40,14 @@ public class GatewayAuthController {
                 if ((boolean) responseBody.get("success")) {
                     responseObject.put("success", true);
                     responseObject.put("message", responseBody.get("message").toString());
-                    responseObject.put("sessionUUID", responseBody.get("sessionUUID").toString());
+                    ResponseCookie createCookie = ResponseCookie.from("sessionId", responseBody.get("sessionUUID").toString())
+                            .httpOnly(true)              // Prevent JavaScript access
+                            .secure(true)                // Use HTTPS in production
+                            .path("/")                   // Cookie is valid for entire domain
+                            .maxAge(Duration.ofSeconds(1800)) // Set expiration
+                            .sameSite("Strict")          // Prevent CSRF (adjust if needed)
+                            .build();
+                    return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,createCookie.toString()).body(responseObject);
                 } else {
                     responseObject.put("success", false);
                     responseObject.put("message", responseBody.get("message").toString());
@@ -57,7 +60,7 @@ public class GatewayAuthController {
             responseObject.put("success", false);
             responseObject.put("message", e.getMessage());
         }
-        return new ResponseEntity<>(responseObject, HttpStatus.OK);
+        return new ResponseEntity<>(responseObject,HttpStatus.OK);
     }
 
     @PostMapping("/register")
@@ -72,7 +75,14 @@ public class GatewayAuthController {
                 if ((boolean) responseBody.get("success")) {
                     responseObject.put("success", true);
                     responseObject.put("message", responseBody.get("message").toString());
-                    responseObject.put("sessionUUID", responseBody.get("sessionUUID").toString());
+                    ResponseCookie createCookie = ResponseCookie.from("sessionId", responseBody.get("sessionUUID").toString())
+                            .httpOnly(true)              // Prevent JavaScript access
+                            .secure(true)                // Use HTTPS in production
+                            .path("/")                   // Cookie is valid for entire domain
+                            .maxAge(Duration.ofSeconds(1800)) // Set expiration
+                            .sameSite("Strict")          // Prevent CSRF (adjust if needed)
+                            .build();
+                    return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,createCookie.toString()).body(responseObject);
                 } else {
                     responseObject.put("success", false);
                     responseObject.put("message", responseBody.get("message").toString());
@@ -89,9 +99,14 @@ public class GatewayAuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(@RequestBody String sessionUUID) {
+    public ResponseEntity<Map<String, Object>> logout(@CookieValue(value = "sessionId",required = false) String sessionUUID) {
         Map<String, Object> responseObject = new HashMap<>();
         try {
+            if(sessionUUID==null){
+                return ResponseEntity
+                        .ok()
+                        .body(Map.of("success",false,"message","Cookie not present"));
+            }
             Map<String, String> body = new HashMap<>();
             body.put("sessionUUID", sessionUUID);
             HttpEntity<Map<String, String>> httpEntity = new HttpEntity<>(body);
@@ -101,6 +116,17 @@ public class GatewayAuthController {
             if (responseBody != null) {
                 if ((boolean) responseBody.get("success")) {
                     responseObject.put("success", true);
+                    ResponseCookie deleteCookie = ResponseCookie.from("sessionId","")
+                            .httpOnly(true)
+                            .secure(true)
+                            .path("/")                // must match original path
+                            .sameSite("Strict")
+                            .maxAge(0)                // 0 means "delete immediately"
+                            .build();
+                    return ResponseEntity
+                            .ok()
+                            .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                            .body(responseObject);
                 } else {
                     responseObject.put("success", false);
                     responseObject.put("message", responseBody.get("message").toString());
@@ -130,6 +156,17 @@ public class GatewayAuthController {
             if (responseBody != null) {
                 if ((boolean) responseBody.get("success")) {
                     responseObject.put("success", true);
+                    ResponseCookie deleteCookie = ResponseCookie.from("sessionId","")
+                            .httpOnly(true)
+                            .secure(true)
+                            .path("/")                // must match original path
+                            .sameSite("Strict")
+                            .maxAge(0)                // 0 means "delete immediately"
+                            .build();
+                    return ResponseEntity
+                            .ok()
+                            .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                            .body(responseObject);
                 } else {
                     responseObject.put("success", false);
                     responseObject.put("message", responseBody.get("message").toString());

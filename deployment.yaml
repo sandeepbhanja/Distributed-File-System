@@ -115,4 +115,62 @@ spec:
       containers:
         - name: gateway-container
           image: sandeepbhanja/dfs-gateway-service:latest
+          volumeMounts:
+            - mountPath: /mnt
+              name: chunk-storage
+      volumes:
+        - name: chunk-storage
+          persistentVolumeClaim:
+            claimName: chunk-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chunk-deployment
+spec:
+  selector:
+    matchLabels:
+      app: chunk-deployment
+  template:
+    metadata:
+      labels:
+        app: chunk-deployment
+    spec:
+      containers:
+        - name: chunk-container
+          image: sandeepbhanja/dfs-chunk-service:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-deployment
+spec:
+  selector:
+    matchLabels:
+      app: ollama-deployment
+  template:
+    metadata:
+      labels:
+        app: ollama-deployment
+    spec:
+      containers:
+        - name: ollama-container
+          image: alpine/ollama:latest
+          ports:
+            - containerPort: 11434
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root/.ollama
+              name: ollama-storage
+          command: [ "sh", "-c" ]
+          args:
+            - |
+              ollama serve &
+              sleep 3 &&
+              ollama pull nomic-embed-text &&
+              tail -f /dev/null
+      volumes:
+        - name: ollama-storage
+          persistentVolumeClaim:
+            claimName: ollama-pvc
 ---
