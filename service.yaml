@@ -76,16 +76,4 @@ spec:
       protocol: TCP
   type: ClusterIP
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: ollama-service
-spec:
-  selector:
-    app: ollama-deployment
-  ports: 
-    - port: 11434
-      targetPort: 11434
-      protocol: TCP
-  type: LoadBalancer
----
+
