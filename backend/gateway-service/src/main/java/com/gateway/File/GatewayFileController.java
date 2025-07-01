@@ -64,6 +64,10 @@ public class GatewayFileController {
 
             Map<String,Object> response = this.gatewayFileService.storeChunk(fileName,chunkId, chunkData.getInputStream(),isSessionExist.getString("sessionData"));
 
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            builder.part("file", multipartFile.getResource());
+
+
 //            Map<String, Object> response = webClient.post()
 //                    .uri("store-chunk")
 //                    .contentType(MediaType.MULTIPART_FORM_DATA)
